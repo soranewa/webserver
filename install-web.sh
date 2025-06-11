@@ -89,9 +89,13 @@ mysql -e "FLUSH PRIVILEGES;"
 
 # === wp-config.php ===
 cp "$WP_DIR/wp-config-sample.php" "$WP_DIR/wp-config.php"
-sed -i "s/database_name_here/$(printf '%s\n' "$DB_NAME" | sed 's/[\/&]/\\&/g')/" "$WP_DIR/wp-config.php"
-sed -i "s/username_here/$(printf '%s\n' "$DB_USER" | sed 's/[\/&]/\\&/g')/" "$WP_DIR/wp-config.php"
-sed -i "s/password_here/$(printf '%s\n' "$DB_PASS" | sed 's/[\/&]/\\&/g')/" "$WP_DIR/wp-config.php"
+safe_db_name=$(printf '%s' "$DB_NAME" | sed -e 's/[\/&\\]/\\&/g')
+safe_db_user=$(printf '%s' "$DB_USER" | sed -e 's/[\/&\\]/\\&/g')
+safe_db_pass=$(printf '%s' "$DB_PASS" | sed -e 's/[\/&\\]/\\&/g')
+
+sed -i "s/database_name_here/$safe_db_name/" "$WP_DIR/wp-config.php"
+sed -i "s/username_here/$safe_db_user/" "$WP_DIR/wp-config.php"
+sed -i "s/password_here/$safe_db_pass/" "$WP_DIR/wp-config.php"
 
 # Set permission untuk hindari form "Connection Information"
 sudo chown -R www-data:www-data "$WP_DIR"
@@ -127,7 +131,7 @@ server {
 }
 EOF
 
-ln -s "$NGINX_CONF" /etc/nginx/sites-enabled/
+ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/
 
 nginx -t && systemctl reload nginx
 
