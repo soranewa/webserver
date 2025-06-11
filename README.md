@@ -20,5 +20,5 @@ Kumpulan script Bash untuk mengelola instalasi WordPress berbasis LEMP stack (Li
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/username/auto-wordpress-setup.git
-cd auto-wordpress-setup
+git clone https://github.com/soranewa/webserver.git
+cd webserver
