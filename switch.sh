@@ -36,6 +36,7 @@ if [[ "$MODE" == "1" ]]; then
     IP_LAN=$(hostname -I | awk '{print $1}')
     read -rp "Masukkan port WordPress instance (contoh: 8000): " PORT
     URL="http://${IP_LAN}:${PORT}"
+    rm -f "$WP_DIR/.domain"
 elif [[ "$MODE" == "2" ]]; then
     read -rp "Masukkan domain publik (contoh: sub.domain.com): " TARGET
     URL="https://$TARGET"
