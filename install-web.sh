@@ -89,9 +89,9 @@ mysql -e "FLUSH PRIVILEGES;"
 
 # === wp-config.php ===
 cp "$WP_DIR/wp-config-sample.php" "$WP_DIR/wp-config.php"
-sed -i "s/database_name_here/$DB_NAME/" "$WP_DIR/wp-config.php"
-sed -i "s/username_here/$DB_USER/" "$WP_DIR/wp-config.php"
-sed -i "s/password_here/$DB_PASS/" "$WP_DIR/wp-config.php"
+sed -i "s/database_name_here/$(printf '%s\n' "$DB_NAME" | sed 's/[\/&]/\\&/g')/" "$WP_DIR/wp-config.php"
+sed -i "s/username_here/$(printf '%s\n' "$DB_USER" | sed 's/[\/&]/\\&/g')/" "$WP_DIR/wp-config.php"
+sed -i "s/password_here/$(printf '%s\n' "$DB_PASS" | sed 's/[\/&]/\\&/g')/" "$WP_DIR/wp-config.php"
 
 # Set permission untuk hindari form "Connection Information"
 sudo chown -R www-data:www-data "$WP_DIR"
