@@ -11,6 +11,18 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
+# === Deteksi versi PHP-FPM ===
+PHP_FPM_VERSION=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
+PHP_FPM_SOCK="/run/php/php${PHP_FPM_VERSION}-fpm.sock"
+PHP_FPM_SERVICE="php${PHP_FPM_VERSION}-fpm"
+
+# === Validasi socket PHP-FPM ===
+if [ ! -S "$PHP_FPM_SOCK" ]; then
+  echo "❌ Socket PHP-FPM $PHP_FPM_SOCK tidak ditemukan!"
+  echo "🔍 Pastikan layanan $PHP_FPM_SERVICE aktif, atau sesuaikan versi PHP."
+  exit 1
+fi
+
 # === Update & Install LEMP ===
 echo "🔍 Mengecek apakah LEMP sudah terinstall..."
 
@@ -38,12 +50,12 @@ fi
 # Enable service
 systemctl enable nginx
 systemctl enable mariadb
-systemctl enable php7.4-fpm 2>/dev/null || true
+systemctl enable "$PHP_FPM_SERVICE" 2>/dev/null || true
 
 # Start service
 systemctl start nginx
 systemctl start mariadb
-systemctl start php7.4-fpm 2>/dev/null || true
+systemctl start "$PHP_FPM_SERVICE" 2>/dev/null || true
 
 # === Input User ===
 echo -e "\n📥 Masukkan PORT untuk WordPress instance:"
@@ -122,7 +134,7 @@ server {
 
     location ~ \.php\$ {
         include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/run/php/php7.4-fpm.sock;
+        fastcgi_pass unix:${PHP_FPM_SOCK};
     }
 
     location ~ /\.ht {
