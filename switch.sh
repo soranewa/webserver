@@ -2,13 +2,39 @@
 
 # === Root Check ===
 if [[ $EUID -ne 0 ]]; then
-  echo "Script harus dijalankan sebagai root"
+  echo "❌ Script harus dijalankan sebagai root"
   exit 1
 fi
 
-# === Input ===
-read -rp "📁 Masukkan nama folder instalasi WordPress di /var/www (contoh:blog): " WP_FOLDER
-WP_DIR="/var/www/$WP_FOLDER"
+WEB_ROOT="/var/www"
+
+echo "======================================"
+echo "🔁 PILIH MODE AKSES WORDPRESS:"
+echo "1. Switch ke LOCAL (IP:PORT)"
+echo "2. Switch ke PUBLIC (Domain)"
+echo "0. Batal"
+echo "======================================"
+read -rp "Pilih opsi (0-2): " MODE
+
+if [[ "$MODE" == "0" ]]; then
+  echo "❌ Dibatalkan oleh user"
+  exit 0
+fi
+
+# === Tampilkan list folder WordPress ===
+echo ""
+echo "📂 Folder WordPress yang tersedia:"
+FOLDERS=$(ls -1 "$WEB_ROOT")
+PS3="Select Number: "
+select WP_FOLDER in $FOLDERS; do
+  if [[ -n "$WP_FOLDER" ]]; then
+    break
+  else
+    echo "❌ Pilihan tidak valid."
+  fi
+done
+
+WP_DIR="$WEB_ROOT/$WP_FOLDER"
 WP_CONFIG="$WP_DIR/wp-config.php"
 
 if [[ ! -f "$WP_CONFIG" ]]; then
@@ -26,33 +52,29 @@ if [[ -z "$DB_NAME" || -z "$DB_USER" || -z "$DB_PASS" ]]; then
   exit 1
 fi
 
-# === Pilih mode sinkronisasi ===
-echo "🔁 Pilih target sinkronisasi akses WordPress:"
-echo "1. Sinkronisasi ke IP lokal + port"
-echo "2. Sinkronisasi ke domain publik (Cloudflare)"
-read -rp "Pilih (1/2): " MODE
-
+# === Input berdasarkan mode ===
 if [[ "$MODE" == "1" ]]; then
-    IP_LAN=$(hostname -I | awk '{print $1}')
-    read -rp "Masukkan port WordPress instance (contoh: 8000): " PORT
-    URL="http://${IP_LAN}:${PORT}"
-    rm -f "$WP_DIR/.domain"
+  IP_LAN=$(hostname -I | awk '{print $1}')
+  read -rp "Masukkan PORT lokal WordPress instance (contoh: 8000): " PORT
+  URL="http://${IP_LAN}:${PORT}"
+  rm -f "$WP_DIR/.domain"
+
 elif [[ "$MODE" == "2" ]]; then
-    read -rp "Masukkan domain publik (contoh: sub.domain.com): " TARGET
-    URL="https://$TARGET"
-    echo "$TARGET" > "$WP_DIR/.domain"
+  read -rp "Masukkan domain publik (contoh: sub.domain.com): " TARGET
+  URL="https://$TARGET"
+  echo "$TARGET" > "$WP_DIR/.domain"
 
 else
-    echo "❌ Input tidak valid"
-    exit 1
+  echo "❌ Input mode tidak valid."
+  exit 1
 fi
 
-
-# === Update ke database ===
-echo "🛠️ Menyetel siteurl dan home di database WordPress ke: $URL"
+# === Update ke database WordPress ===
+echo "🛠️ Menyetel siteurl dan home di database ke: $URL"
 mysql -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" -e "
 UPDATE wp_options SET option_value = '$URL' WHERE option_name = 'siteurl';
 UPDATE wp_options SET option_value = '$URL' WHERE option_name = 'home';
 "
 
-echo "✅ Sinkronisasi selesai. Sekarang WordPress akan diarahkan ke: $URL"
+echo "✅ Sinkronisasi selesai. Sekarang WordPress akan diarahkan ke:"
+echo "$URL"
