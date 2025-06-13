@@ -82,7 +82,8 @@ while true; do
 
     SALT=$(curl -s https://api.wordpress.org/secret-key/1.1/salt/)
     sed -i "/AUTH_KEY/d;/SECURE_AUTH_KEY/d;/LOGGED_IN_KEY/d;/NONCE_KEY/d;/AUTH_SALT/d;/SECURE_AUTH_SALT/d;/LOGGED_IN_SALT/d;/NONCE_SALT/d" "$WP_DIR/wp-config.php"
-    sed -i "/^\/\* That.*/i $SALT" "$WP_DIR/wp-config.php"
+    awk -v salt="$SALT" '/^\/\* That/{print salt}1' "$WP_DIR/wp-config.php" > "$WP_DIR/wp-config.temp.php"
+    mv "$WP_DIR/wp-config.temp.php" "$WP_DIR/wp-config.php"
 
     NGINX_CONF="/etc/nginx/sites-available/wp_$WP_PORT"
     PHP_FPM_VERSION=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
@@ -113,8 +114,9 @@ EOF
     ln -sf "$NGINX_CONF" "/etc/nginx/sites-enabled/"
     nginx -t && systemctl reload nginx
 
-    echo -e "\n️ WordPress berhasil diinstal!"
-    echo "🌐 Akses: http://$(hostname -I | awk '{print \$1}'):$WP_PORT"
+    IP_LOCAL=$(hostname -I | awk '{print $1}')
+    echo -e "\n✅ WordPress berhasil diinstal!"
+    echo "🌐 Akses: http://${IP_LOCAL}:$WP_PORT"
     echo "📁 Direktori: $WP_DIR"
     echo "🗃️ DB: $DB_NAME, User: $DB_USER, Pass: $DB_PASS"
     ;;
