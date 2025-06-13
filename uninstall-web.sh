@@ -81,13 +81,13 @@ while true; do
           rm -f "$NGINX_LINK"
           echo "✅ Symlink $NGINX_LINK dihapus"
       fi
-      echo "🧹 Membersihkan konfigurasi Nginx yang tidak punya folder WordPress..."
+      echo "🧹 ✅ Remove Config Nginx Ø Folder"
       for conf in /etc/nginx/sites-available/wp_*; do
         [ -e "$conf" ] || continue
         PORT=$(basename "$conf" | cut -d'_' -f2)
         ROOT=$(grep "root " "$conf" | head -n1 | awk '{print $2}' | sed 's/;//')
         if [[ ! -d "$ROOT" ]]; then
-          echo "🗑️ Menghapus config nginx untuk port $PORT karena folder $ROOT tidak ada..."
+          echo "🗑️ Menghapus Config Nginx untuk port $PORT karena Folder $ROOT Ø"
           rm -f "$conf"
           rm -f "/etc/nginx/sites-enabled/wp_$PORT"
         fi
