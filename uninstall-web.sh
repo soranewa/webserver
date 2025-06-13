@@ -92,6 +92,10 @@ while true; do
       echo "🧱 Menghapus seluruh stack LEMP..."
       apt purge nginx mariadb-server php php-mysql php-fpm -y
       apt autoremove --purge -y
+      rm -rf /var/lib/mysql
+      rm -rf /etc/mysql
+      rm -rf /var/log/mysql
+      rm -rf /var/run/mysqld
       echo "✅ Semua paket LEMP telah dihapus"
       ;;
 
