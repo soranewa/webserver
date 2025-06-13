@@ -53,14 +53,18 @@ if [[ -z "$DB_NAME" || -z "$DB_USER" || -z "$DB_PASS" ]]; then
 fi
 
 # === Cari file konfigurasi Nginx berdasarkan WP_DIR ===
-NGINX_CONF=$(find /etc/nginx/sites-available -type f -name "wp_*" | while read -r conf; do
-  if grep -q "$WP_DIR" "$conf"; then
-    echo "$conf"
+NGINX_CONF=""
+PORT=""
+
+for file in /etc/nginx/sites-available/wp_*; do
+  if grep -q "root $WP_DIR" "$file"; then
+    NGINX_CONF="$file"
+    PORT=$(basename "$file" | cut -d'_' -f2)
     break
   fi
-done)
+done
 
-if [[ -z "$NGINX_CONF" ]]; then
+if [[ -z "$NGINX_CONF" || -z "$PORT" ]]; then
   echo "❌ Tidak ditemukan file konfigurasi Nginx untuk folder ini."
   exit 1
 fi
@@ -68,7 +72,6 @@ fi
 # === Input berdasarkan mode ===
 if [[ "$MODE" == "1" ]]; then
   IP_LAN=$(hostname -I | awk '{print $1}')
-  read -rp "Masukkan PORT lokal WordPress instance (contoh: 8000): " PORT
   URL="http://${IP_LAN}:${PORT}"
   rm -f "$WP_DIR/.domain"
 
