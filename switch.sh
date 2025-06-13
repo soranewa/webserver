@@ -52,6 +52,19 @@ if [[ -z "$DB_NAME" || -z "$DB_USER" || -z "$DB_PASS" ]]; then
   exit 1
 fi
 
+# === Cari file konfigurasi Nginx berdasarkan WP_DIR ===
+NGINX_CONF=$(find /etc/nginx/sites-available -type f -name "wp_*" | while read -r conf; do
+  if grep -q "$WP_DIR" "$conf"; then
+    echo "$conf"
+    break
+  fi
+done)
+
+if [[ -z "$NGINX_CONF" ]]; then
+  echo "❌ Tidak ditemukan file konfigurasi Nginx untuk folder ini."
+  exit 1
+fi
+
 # === Input berdasarkan mode ===
 if [[ "$MODE" == "1" ]]; then
   IP_LAN=$(hostname -I | awk '{print $1}')
@@ -76,5 +89,22 @@ UPDATE wp_options SET option_value = '$URL' WHERE option_name = 'siteurl';
 UPDATE wp_options SET option_value = '$URL' WHERE option_name = 'home';
 "
 
+# === Modifikasi Konfigurasi Nginx ===
+if [[ "$MODE" == "1" ]]; then
+  echo "🧹 Menghapus blokir Nginx (mode LOCAL)"
+  sed -i '/# AUTO-BLOCK START/,/# AUTO-BLOCK END/d' "$NGINX_CONF"
+  nginx -t && systemctl reload nginx
+
+elif [[ "$MODE" == "2" ]]; then
+  echo "🔒 Menambahkan blokir wp-login.php dan wp-admin di $NGINX_CONF"
+  if ! grep -q "# AUTO-BLOCK START" "$NGINX_CONF"; then
+    sed -i "/server_name/a \\\n    # AUTO-BLOCK START\n    location = /wp-login.php { return 404; }\n    location = /wp-admin { return 404; }\n    # AUTO-BLOCK END\n" "$NGINX_CONF"
+    nginx -t && systemctl reload nginx
+  else
+    echo "ℹ️ Blokir sudah ada di konfigurasi Nginx"
+  fi
+fi
+
+echo ""
 echo "✅ Sinkronisasi selesai. Sekarang WordPress akan diarahkan ke:"
 echo "$URL"
