@@ -13,6 +13,7 @@ Kumpulan script Bash untuk mengelola instalasi WordPress berbasis LEMP stack (Li
 | `list-web.sh`      | Menampilkan daftar instance WordPress yang terinstal                  |
 | `switch.sh`        | Mengatur ulang URL (siteurl & home) ke IP lokal atau domain publik     |
 | `bersih.sh`        | Membersihkan cache, sampah, dan log sistem untuk optimasi server       |
+| `manage-web.sh`    | Mengelola website static untuk HTML CSS JS PHP dan atau database       |
 
 ---
 
