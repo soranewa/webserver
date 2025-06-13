@@ -1,12 +1,13 @@
 #!/bin/bash
 
 echo "📋 Daftar WordPress Instance yang Terinstal:"
-echo "==============================================="
-printf "%-20s %-10s %-30s %-10s\n" "FOLDER" "PORT" "DOMAIN" "STATUS"
-echo "-----------------------------------------------"
+echo "=============================================================="
+printf "%-3s %-15s %-6s %-35s %-10s\n" "NO" "FOLDER" "PORT" "DOMAIN" "STATUS"
+echo "--------------------------------------------------------------"
 
+i=1
 for conf in /etc/nginx/sites-available/wp_*; do
-  [ -e "$conf" ] || continue  # skip jika tidak ada
+  [ -e "$conf" ] || continue
   PORT=$(basename "$conf" | cut -d'_' -f2)
   ROOT=$(grep "root " "$conf" | head -n1 | awk '{print $2}' | sed 's/;//')
   FOLDER=$(basename "$ROOT")
@@ -20,8 +21,9 @@ for conf in /etc/nginx/sites-available/wp_*; do
       DOMAIN="-"
       STATUS="local only"
     fi
-    printf "%-20s %-10s %-30s %-10s\n" "$FOLDER" "$PORT" "$DOMAIN" "$STATUS"
+    printf "%-3s %-15s %-6s %-35s %-10s\n" "$i" "$FOLDER" "$PORT" "$DOMAIN" "$STATUS"
+    ((i++))
   fi
 done
 
-echo "==============================================="
+echo "=============================================================="
