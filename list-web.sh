@@ -1,9 +1,17 @@
 #!/bin/bash
 
-echo "📋 Daftar WordPress Instance yang Terinstal:"
-echo "=============================================================="
-printf "%-3s %-12s %-6s %-30s %-10s\n" "NO" "FOLDER" "PORT" "DOMAIN" "STATUS"
-echo "--------------------------------------------------------------"
+IP_LOCAL=$(hostname -I | awk '{print $1}')
+
+# Warna ANSI
+GREEN="\033[0;32m"
+YELLOW="\033[1;33m"
+CYAN="\033[0;36m"
+NC="\033[0m" # No Color
+
+echo -e "${CYAN}📋 Daftar WordPress Instance yang Terinstal:${NC}"
+echo -e "${CYAN}===============================================================================${NC}"
+printf "${CYAN}%-3s %-12s %-30s %-30s %-10s${NC}\n" "NO" "FOLDER" "DOMAIN" "URL" "STATUS"
+echo -e "${CYAN}-------------------------------------------------------------------------------${NC}"
 
 i=1
 for conf in /etc/nginx/sites-available/wp_*; do
@@ -16,14 +24,16 @@ for conf in /etc/nginx/sites-available/wp_*; do
   if [[ -f "$ROOT/wp-config.php" ]]; then
     if [[ -f "$DOMAIN_FILE" ]]; then
       DOMAIN=$(cat "$DOMAIN_FILE")
-      STATUS="public"
+      STATUS="${GREEN}public${NC}"
     else
       DOMAIN="-"
-      STATUS="local"
+      STATUS="${YELLOW}local${NC}"
     fi
-    printf "%-3s %-12s %-6s %-30s %-10s\n" "$i" "$FOLDER" "$PORT" "$DOMAIN" "$STATUS"
+
+    URL="http://${IP_LOCAL}:${PORT}"
+    printf "%-3s %-12s %-30s %-30s %-10b\n" "$i" "$FOLDER" "$DOMAIN" "$URL" "$STATUS"
     ((i++))
   fi
 done
 
-echo "=============================================================="
+echo -e "${CYAN}===============================================================================${NC}"
