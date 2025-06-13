@@ -17,7 +17,7 @@ echo "======================================"
 read -rp "Pilih opsi (0-2): " MODE
 
 if [[ "$MODE" == "0" ]]; then
-  echo "❌ Dibatalkan oleh user"
+  echo "👋 Keluar."
   exit 0
 fi
 
