@@ -72,9 +72,13 @@ while true; do
     mysql -e "FLUSH PRIVILEGES;"
 
     cp "$WP_DIR/wp-config-sample.php" "$WP_DIR/wp-config.php"
-    sed -i "s/database_name_here/$DB_NAME/" "$WP_DIR/wp-config.php"
-    sed -i "s/username_here/$DB_USER/" "$WP_DIR/wp-config.php"
-    sed -i "s/password_here/$DB_PASS/" "$WP_DIR/wp-config.php"
+    safe_db_name=$(printf '%s' "$DB_NAME" | sed -e 's/[\/&\\]/\\&/g')
+    safe_db_user=$(printf '%s' "$DB_USER" | sed -e 's/[\/&\\]/\\&/g')
+    safe_db_pass=$(printf '%s' "$DB_PASS" | sed -e 's/[\/&\\]/\\&/g')
+    
+    sed -i "s/database_name_here/$safe_db_name/" "$WP_DIR/wp-config.php"
+    sed -i "s/username_here/$safe_db_user/" "$WP_DIR/wp-config.php"
+    sed -i "s/password_here/$safe_db_pass/" "$WP_DIR/wp-config.php"
 
     chown -R www-data:www-data "$WP_DIR"
     find "$WP_DIR" -type d -exec chmod 755 {} \;
