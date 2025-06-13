@@ -2,7 +2,7 @@
 
 echo "📋 Daftar WordPress Instance yang Terinstal:"
 echo "=============================================================="
-printf "%-3s %-15s %-6s %-35s %-10s\n" "NO" "FOLDER" "PORT" "DOMAIN" "STATUS"
+printf "%-3s %-12s %-6s %-30s %-10s\n" "NO" "FOLDER" "PORT" "DOMAIN" "STATUS"
 echo "--------------------------------------------------------------"
 
 i=1
@@ -19,9 +19,9 @@ for conf in /etc/nginx/sites-available/wp_*; do
       STATUS="public"
     else
       DOMAIN="-"
-      STATUS="local only"
+      STATUS="local"
     fi
-    printf "%-3s %-15s %-6s %-35s %-10s\n" "$i" "$FOLDER" "$PORT" "$DOMAIN" "$STATUS"
+    printf "%-3s %-12s %-6s %-30s %-10s\n" "$i" "$FOLDER" "$PORT" "$DOMAIN" "$STATUS"
     ((i++))
   fi
 done
