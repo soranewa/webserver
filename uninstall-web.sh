@@ -92,9 +92,10 @@ while true; do
           rm -f "/etc/nginx/sites-enabled/wp_$PORT"
         fi
       done
+      
       echo "🔄 Reload nginx..."
       systemctl reload nginx
-
+      
       echo "✅ Uninstall selesai untuk instance: $WP_NAME"
       ;;
 
