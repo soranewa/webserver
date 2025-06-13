@@ -91,6 +91,7 @@ while true; do
           rm -f "$conf"
           rm -f "/etc/nginx/sites-enabled/wp_$PORT"
         fi
+      done
       echo "🔄 Reload nginx..."
       systemctl reload nginx
 
