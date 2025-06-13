@@ -48,8 +48,8 @@ while true; do
       [[ "$CONFIRM" != "y" ]] && echo "❌ Dibatalkan." && continue
 
       if [ -f "$WPCONFIG" ]; then
-          DB_NAME=$(grep DB_NAME "$WPCONFIG" | cut -d '"' -f 2 | cut -d "'" -f 2)
-          DB_USER=$(grep DB_USER "$WPCONFIG" | cut -d '"' -f 2 | cut -d "'" -f 2)
+          DB_NAME=$(grep "DB_NAME" "$WPCONFIG" | awk -F"'" '{print $4}')
+          DB_USER=$(grep "DB_USER" "$WPCONFIG" | awk -F"'" '{print $4}')
 
           echo "🗃️ Database terdeteksi dari wp-config.php:"
           echo "   DB_NAME = $DB_NAME"
