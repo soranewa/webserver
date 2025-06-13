@@ -1,5 +1,5 @@
 #!/bin/bash
-clear
+
 # === Root Check ===
 if [[ $EUID -ne 0 ]]; then
   echo "❌ Script harus dijalankan sebagai root"
