@@ -12,7 +12,7 @@ echo "3. Buat Database (Sesuai Prefix Folder)"
 echo "4. Hapus Database"
 echo "0. Keluar"
 echo "======================================"
-read -rp "Pilih opsi (0-4): " MENU
+read -rp "Pilih opsi (0-4): " MANAGE WEB STATIC
 
 case $MENU in
 1)
