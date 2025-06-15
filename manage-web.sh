@@ -102,8 +102,9 @@ EOF
   echo ""
   echo "📂 List Folder:"
   FOLDERS=$(ls -1 "$WEB_ROOT")
-  echo "🗃️ List Database:"
-  DBS=$(mysql -uroot -e "SHOW DATABASES;" 2>/dev/null | tail -n +2)
+  echo ""
+  echo "🗃️ List Database yang sudah ada:"
+  mysql -uroot -e "SHOW DATABASES;" 2>/dev/null | tail -n +2
   PS3="Select Number: "
   select FOLDER in $FOLDERS; do
     [[ -n "$FOLDER" ]] && break
