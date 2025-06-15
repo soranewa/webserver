@@ -3,6 +3,7 @@
 WEB_ROOT="/var/www"
 
 while true; do
+clear
 echo "======================================"
 echo "🧰 MENU:"
 echo "======================================"
@@ -28,7 +29,8 @@ case $MENU in
   TARGET="$WEB_ROOT/$FOLDER"
   if [[ -d "$TARGET" ]]; then
     echo "❌ Folder sudah ada!"
-    exit 1
+    sleep 1
+    continue
   fi
   mkdir -p "$TARGET"
   chown -R www-data:www-data "$TARGET"
@@ -76,7 +78,8 @@ EOF
   TARGET="$WEB_ROOT/$FOLDER"
   if [[ ! -d "$TARGET" ]]; then
     echo "❌ Folder tidak ditemukan."
-    exit 1
+    sleep 1
+    continue
   fi
 
   rm -rf "$TARGET"
@@ -161,5 +164,7 @@ FLUSH PRIVILEGES;
 esac
 
 echo ""
-  read -rp "Tekan Enter untuk kembali ke menu..."
+read -rp "Tekan Enter untuk kembali ke menu..."
+clear
+continue
 done
