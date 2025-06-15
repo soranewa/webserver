@@ -100,12 +100,12 @@ EOF
 
 3)
   echo ""
-  echo "📂 List Folder:"
-  FOLDERS=$(ls -1 "$WEB_ROOT")
-
-  echo ""
   echo "🗃️ List Database yang sudah ada:"
   mysql -uroot -e "SHOW DATABASES;" 2>/dev/null | tail -n +2
+
+  echo ""
+  echo "📂 List Folder:"
+  FOLDERS=$(ls -1 "$WEB_ROOT")
 
   PS3="Select Number: "
   select FOLDER in $FOLDERS; do
