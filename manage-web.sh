@@ -5,6 +5,7 @@ WEB_ROOT="/var/www"
 while true; do
 echo "======================================"
 echo "🧰 MENU:"
+echo "======================================"
 echo "1. Buat Folder Website (+ Port Nginx)"
 echo "2. Hapus Folder Website (+ Port)"
 echo "3. Buat Database (Sesuai Prefix Folder)"
