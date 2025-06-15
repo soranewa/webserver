@@ -23,7 +23,9 @@ case $MENU in
 
   echo ""
   echo "🔌 Port Nginx in Use:"
-  ls /etc/nginx/sites-available/web_* 2>/dev/null | cut -d'_' -f2
+  ls /etc/nginx/sites-available/web_* /etc/nginx/sites-available/wp_* 2>/dev/null \
+    | grep -E '/(web|wp)_[0-9]+' \
+    | cut -d'_' -f2
 
   read -rp "📁 Nama Folder Baru (misal: mysite): " FOLDER
   TARGET="$WEB_ROOT/$FOLDER"
@@ -100,6 +102,8 @@ EOF
   echo ""
   echo "📂 List Folder:"
   FOLDERS=$(ls -1 "$WEB_ROOT")
+  echo "🗃️ List Database:"
+  DBS=$(mysql -uroot -e "SHOW DATABASES;" 2>/dev/null | tail -n +2)
   PS3="Select Number: "
   select FOLDER in $FOLDERS; do
     [[ -n "$FOLDER" ]] && break
