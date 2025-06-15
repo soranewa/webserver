@@ -1,4 +1,6 @@
 #!/bin/bash
+trap "exit" INT TERM ERR
+trap "kill 0" EXIT
 
 IP_LOCAL=$(hostname -I | awk '{print $1}')
 
