@@ -4,15 +4,14 @@ WEB_ROOT="/var/www"
 
 while true; do
 echo "======================================"
-echo "🧰 MANAGE WEB STATIC:"
-echo "======================================"
+echo "🧰 MENU:"
 echo "1. Buat Folder Website (+ Port Nginx)"
 echo "2. Hapus Folder Website (+ Port)"
 echo "3. Buat Database (Sesuai Prefix Folder)"
 echo "4. Hapus Database"
 echo "0. Keluar"
 echo "======================================"
-read -rp "Pilih opsi (0-4): " MANAGE WEB STATIC
+read -rp "Pilih opsi (0-4): " MENU
 
 case $MENU in
 1)
