@@ -1,4 +1,6 @@
 #!/bin/bash
+trap "exit" INT TERM ERR
+trap "kill 0" EXIT
 
 # === Root Check ===
 if [[ $EUID -ne 0 ]]; then
