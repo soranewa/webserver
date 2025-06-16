@@ -182,23 +182,35 @@ FLUSH PRIVILEGES;
   echo "⬇️ Mengunduh TinyFileManager ke $FILE..."
   wget -q -O "$FILE" https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php
 
-  echo "🛠️ Konfigurasi akses root & user login..."
+  echo "🛠️ Konfigurasi akses root..."
   sed -i "s|\$root_path = .*|\\\$root_path = '/';|" "$FILE"
-  sed -i "s|\$auth_users = array([^)]*);|\$auth_users = array( '$TINYUSER' => '$TINYPASS' );|" "$FILE"
 
-  echo "🧠 Menyiapkan file config.php agar bisa simpan preferensi..."
-  touch "$TARGET/config.php"
-  chmod 666 "$TARGET/config.php"
+  echo "🔐 Menulis file config.php..."
+  cat > "$TARGET/config.php" <<EOF
+<?php
+\$auth_users = array(
+  '$TINYUSER' => '$TINYPASS'
+);
+\$use_login = true;
+\$theme = "light";
+\$default_timezone = "Asia/Jakarta";
+EOF
+
+  echo "🧠 Atur permission agar bisa upload dan simpan preferensi..."
   chown www-data:www-data "$TARGET/config.php"
+  chmod 666 "$TARGET/config.php"
 
-  echo "📐 Atur upload limit PHP (2048M)..."
+  echo "📐 Atur PHP upload limit (2048M)..."
   PHP_VER=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
   PHP_INI="/etc/php/$PHP_VER/fpm/php.ini"
   sed -i 's/^upload_max_filesize.*/upload_max_filesize = 2048M/' "$PHP_INI"
   sed -i 's/^post_max_size.*/post_max_size = 2048M/' "$PHP_INI"
   systemctl restart php$PHP_VER-fpm
 
-  echo "🔍 Mendeteksi port Nginx yang sesuai folder..."
+  echo "🔓 Izinkan www-data baca /home/bayu (jika perlu)"
+  chmod o+rx /home/bayu 2>/dev/null
+
+  echo "🔍 Mendeteksi port Nginx..."
   PORT_FOUND=""
   for conf in /etc/nginx/sites-available/web_*; do
     ROOT_DIR=$(grep -m1 "root " "$conf" | awk '{print $2}' | sed 's/;//')
@@ -209,8 +221,7 @@ FLUSH PRIVILEGES;
   done
 
   if [[ -z "$PORT_FOUND" ]]; then
-    echo "⚠️ Gagal menemukan port dari konfigurasi Nginx untuk $TARGET"
-    echo "   Silakan periksa manual."
+    echo "⚠️ Gagal menemukan port Nginx."
   else
     IP=$(hostname -I | awk '{print $1}')
     echo ""
