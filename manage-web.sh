@@ -205,16 +205,14 @@ FLUSH PRIVILEGES;
   echo "⬇️ Mengunduh TinyFileManager ke $FILE..."
   wget -q -O "$FILE" https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php
 
-  echo "🛠️ Konfigurasi akses root..."
+  echo "🛠️ Set akses root dan bersihkan auth default..."
   sed -i "s|\$root_path = .*|\\\$root_path = '/';|" "$FILE"
-
-  echo "🧹 Menghapus semua definisi auth bawaan di index.php..."
   sed -i '/auth_users/d' "$FILE"
   sed -i '/use_login/d' "$FILE"
   sed -i '/theme/d' "$FILE"
   sed -i '/default_timezone/d' "$FILE"
 
-  echo "🔐 Membuat config.php dengan password hash..."
+  echo "🔐 Membuat config.php dengan password terenkripsi..."
   HASHED_PASS=$(php -r "echo password_hash('$TINYPASS', PASSWORD_DEFAULT);")
   cat > "$TARGET/config.php" <<EOF
 <?php
