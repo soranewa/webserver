@@ -75,11 +75,24 @@ echo -e "${YELLOW}🧠 Melepaskan cache RAM (drop_caches)...${RESET}"
 sync
 echo 3 > /proc/sys/vm/drop_caches
 
-# 13. Tampilkan sisa RAM setelah dibersihkan
-echo -e "${CYAN}📊 Status RAM setelah dibersihkan:${RESET}"
-free -h
+# 13. Tampilkan sisa RAM dan CPU setelah dibersihkan
+echo -e "${CYAN}📊 Status Sistem setelah dibersihkan:${RESET}"
 
-# 14. Bersihkan file sementara dari curl <(bash)
+# 14. RAM
+mem_line=$(free | grep Mem:)
+total_mem=$(echo "$mem_line" | awk '{print $2}')
+used_mem=$(echo "$mem_line" | awk '{print $3}')
+available_mem=$(echo "$mem_line" | awk '{print $7}')
+mem_percent=$((used_mem * 100 / total_mem))
+
+echo -e "🧠 RAM:  Total: $(free -h | awk '/Mem:/ {print $2}') | Digunakan: $(free -h | awk '/Mem:/ {print $3}') | Tersedia: $(free -h | awk '/Mem:/ {print $7}') | ${mem_percent}% digunakan"
+
+# 15. CPU
+cpu_idle=$(top -bn1 | grep "%Cpu(s)" | awk '{print $8}')
+cpu_used=$(LC_NUMERIC=C awk "BEGIN {printf \"%.1f\", 100 - $cpu_idle}")
+echo -e "⚙️  CPU:  ${cpu_used}% digunakan (idle: ${cpu_idle}%)"
+
+# 16. Bersihkan file sementara dari curl <(bash)
 echo -e "${YELLOW}🧼 Menghapus file sementara dari curl (<(bash))...${RESET}"
 find /tmp -type f -name 'sh-*' -delete 2>/dev/null
 
