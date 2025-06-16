@@ -13,9 +13,10 @@ echo "1. Buat Folder Website (+ Port Nginx)"
 echo "2. Hapus Folder Website (+ Port)"
 echo "3. Buat Database (Sesuai Prefix Folder)"
 echo "4. Hapus Database"
+echo "5. Install TinyFileManager (Root Server)"
 echo "0. Keluar"
 echo "======================================"
-read -rp "Pilih opsi (0-4): " MENU
+read -rp "Pilih opsi (0-5): " MENU
 
 case $MENU in
 1)
@@ -159,6 +160,64 @@ FLUSH PRIVILEGES;
     echo "✅ Database dan user berhasil dihapus."
   else
     echo "❌ Dibatalkan."
+  fi
+  ;;
+
+5)
+  echo ""
+  echo "📂 List Folder Web yang tersedia:"
+  FOLDERS=$(ls -1 "$WEB_ROOT")
+  PS3="Pilih folder untuk TinyFileManager: "
+  select FOLDER in $FOLDERS; do
+    [[ -n "$FOLDER" ]] && break
+    echo "❌ Pilihan tidak valid."
+  done
+
+  TARGET="$WEB_ROOT/$FOLDER"
+  FILE="$TARGET/tinyfilemanager.php"
+
+  read -rp "👤 Masukkan username login: " TINYUSER
+  read -rp "🔑 Masukkan password login: " TINYPASS
+
+  echo "⬇️ Mengunduh TinyFileManager ke $FILE..."
+  wget -q -O "$FILE" https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php
+
+  echo "🛠️ Konfigurasi akses root & user login..."
+  sed -i "s|\$root_path = .*|\\\$root_path = '/';|" "$FILE"
+  sed -i "s|\$auth_users = array([^)]*);|\$auth_users = array( '$TINYUSER' => '$TINYPASS' );|" "$FILE"
+
+  echo "🧠 Menyiapkan file config.php agar bisa simpan preferensi..."
+  touch "$TARGET/config.php"
+  chmod 666 "$TARGET/config.php"
+  chown www-data:www-data "$TARGET/config.php"
+
+  echo "📐 Atur upload limit PHP (2048M)..."
+  PHP_VER=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
+  PHP_INI="/etc/php/$PHP_VER/fpm/php.ini"
+  sed -i 's/^upload_max_filesize.*/upload_max_filesize = 2048M/' "$PHP_INI"
+  sed -i 's/^post_max_size.*/post_max_size = 2048M/' "$PHP_INI"
+  systemctl restart php$PHP_VER-fpm
+
+  echo "🔍 Mendeteksi port Nginx yang sesuai folder..."
+  PORT_FOUND=""
+  for conf in /etc/nginx/sites-available/web_*; do
+    ROOT_DIR=$(grep -m1 "root " "$conf" | awk '{print $2}' | sed 's/;//')
+    if [[ "$ROOT_DIR" == "$TARGET" ]]; then
+      PORT_FOUND=$(basename "$conf" | cut -d'_' -f2)
+      break
+    fi
+  done
+
+  if [[ -z "$PORT_FOUND" ]]; then
+    echo "⚠️ Gagal menemukan port dari konfigurasi Nginx untuk $TARGET"
+    echo "   Silakan periksa manual."
+  else
+    IP=$(hostname -I | awk '{print $1}')
+    echo ""
+    echo "✅ TinyFileManager siap digunakan!"
+    echo "🌐 Akses: http://$IP:$PORT_FOUND/tinyfilemanager.php"
+    echo "👤 Username: $TINYUSER"
+    echo "🔑 Password: $TINYPASS"
   fi
   ;;
 
