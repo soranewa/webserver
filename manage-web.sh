@@ -185,7 +185,10 @@ FLUSH PRIVILEGES;
   echo "🛠️ Konfigurasi akses root..."
   sed -i "s|\$root_path = .*|\\\$root_path = '/';|" "$FILE"
 
-  echo "🔐 Menulis file config.php..."
+  echo "🔓 Hapus auth bawaan dari index.php agar config.php aktif..."
+  sed -i '/^\$auth_users = array(/,/);/d' "$FILE"
+
+  echo "🧠 Menulis config.php (login + theme)..."
   cat > "$TARGET/config.php" <<EOF
 <?php
 \$auth_users = array(
@@ -196,21 +199,20 @@ FLUSH PRIVILEGES;
 \$default_timezone = "Asia/Jakarta";
 EOF
 
-  echo "🧠 Atur permission agar bisa upload dan simpan preferensi..."
   chown www-data:www-data "$TARGET/config.php"
   chmod 666 "$TARGET/config.php"
 
-  echo "📐 Atur PHP upload limit (2048M)..."
+  echo "📐 Set upload limit PHP ke 2048M..."
   PHP_VER=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
   PHP_INI="/etc/php/$PHP_VER/fpm/php.ini"
   sed -i 's/^upload_max_filesize.*/upload_max_filesize = 2048M/' "$PHP_INI"
   sed -i 's/^post_max_size.*/post_max_size = 2048M/' "$PHP_INI"
   systemctl restart php$PHP_VER-fpm
 
-  echo "🔓 Izinkan www-data baca /home/bayu (jika perlu)"
+  echo "🔓 Izinkan akses /home/bayu (jika perlu)..."
   chmod o+rx /home/bayu 2>/dev/null
 
-  echo "🔍 Mendeteksi port Nginx..."
+  echo "🔍 Mendeteksi port dari Nginx config..."
   PORT_FOUND=""
   for conf in /etc/nginx/sites-available/web_*; do
     ROOT_DIR=$(grep -m1 "root " "$conf" | awk '{print $2}' | sed 's/;//')
@@ -221,11 +223,11 @@ EOF
   done
 
   if [[ -z "$PORT_FOUND" ]]; then
-    echo "⚠️ Gagal menemukan port Nginx."
+    echo "⚠️ Gagal menemukan port dari konfigurasi Nginx."
   else
     IP=$(hostname -I | awk '{print $1}')
     echo ""
-    echo "✅ TinyFileManager siap digunakan!"
+    echo "✅ TinyFileManager berhasil dipasang!"
     echo "🌐 Akses: http://$IP:$PORT_FOUND/tinyfilemanager.php"
     echo "👤 Username: $TINYUSER"
     echo "🔑 Password: $TINYPASS"
