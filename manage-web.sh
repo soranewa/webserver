@@ -164,85 +164,134 @@ FLUSH PRIVILEGES;
   ;;
 
 5)
+  clear
   echo ""
-  echo "📂 List Folder Web yang tersedia:"
-  FOLDERS=( $(ls -1 "$WEB_ROOT") )
+  echo "📂 Daftar Folder di /var/www:"
+  FOLDERS=($(ls -1 "$WEB_ROOT"))
   for i in "${!FOLDERS[@]}"; do
     printf "%2d) %s\n" $((i+1)) "${FOLDERS[$i]}"
   done
 
-  read -rp "Pilih nomor folder target: " F_IDX
+  # Validasi pilihan folder
+  while true; do
+    read -rp "Pilih nomor folder target: " F_IDX
+    [[ "$F_IDX" =~ ^[0-9]+$ ]] && (( F_IDX >= 1 )) && (( F_IDX <= ${#FOLDERS[@]} )) && break
+    echo "❌ Nomor tidak valid!"
+  done
+
   FOLDER="${FOLDERS[$((F_IDX-1))]}"
   TARGET="$WEB_ROOT/$FOLDER"
 
   if [[ ! -d "$TARGET" ]]; then
-    echo "❌ Folder tidak ditemukan: $TARGET"
-    exit 1
+    echo "❌ Folder tidak ditemukan!"
+    sleep 2
+    continue
   fi
 
   echo ""
-  echo "🔌 List Port dari konfigurasi Nginx:"
+  echo "🔌 Mencari port yang terkait..."
   PORTS=()
-  for conf in /etc/nginx/sites-available/web_*; do
-    PORT_NUM=$(basename "$conf" | cut -d'_' -f2)
-    echo "$(( ${#PORTS[@]} + 1 ))) $PORT_NUM"
-    PORTS+=("$PORT_NUM")
-  done
-
-  read -rp "Pilih nomor port yang sesuai dengan folder di atas: " P_IDX
-  PORT_FOUND="${PORTS[$((P_IDX-1))]}"
-
-  if [[ -z "$PORT_FOUND" ]]; then
-    echo "❌ Port tidak ditemukan!"
-    exit 1
+  mapfile -t PORT_CONF < <(grep -l "root $TARGET;" /etc/nginx/sites-available/web_* 2>/dev/null)
+  
+  if [[ ${#PORT_CONF[@]} -eq 0 ]]; then
+    echo "❌ Tidak ada konfigurasi Nginx untuk folder ini!"
+    sleep 2
+    continue
   fi
 
-  read -rp "👤 Masukkan username login: " TINYUSER
-  read -rp "🔑 Masukkan password login: " TINYPASS
+  for conf in "${PORT_CONF[@]}"; do
+    PORT_NUM=$(basename "$conf" | cut -d'_' -f2)
+    PORTS+=("$PORT_NUM")
+    echo "✔ Port: $PORT_NUM"
+  done
 
+  # Handle multiple ports
+  PORT_FOUND="${PORTS[0]}"
+  if [[ ${#PORTS[@]} -gt 1 ]]; then
+    echo ""
+    echo "🔢 Ditemukan beberapa port:"
+    for i in "${!PORTS[@]}"; do
+      printf "%2d) %s\n" $((i+1)) "${PORTS[$i]}"
+    done
+    
+    while true; do
+      read -rp "Pilih nomor port: " P_IDX
+      [[ "$P_IDX" =~ ^[0-9]+$ ]] && (( P_IDX >= 1 )) && (( P_IDX <= ${#PORTS[@]} )) && break
+      echo "❌ Nomor tidak valid!"
+    done
+    
+    PORT_FOUND="${PORTS[$((P_IDX-1))]}"
+  fi
+
+  # Input credentials - TANPA HIDE PASSWORD
+  echo ""
+  read -rp "👤 Masukkan username admin: " TINYUSER
+  while true; do
+    read -rp "🔑 Masukkan password (min 8 karakter): " TINYPASS
+    echo
+    [[ ${#TINYPASS} -ge 8 ]] && break
+    echo "❌ Password terlalu pendek!"
+  done
+
+  # Download and configure
+  echo ""
+  echo "⬇️ Mengunduh TinyFileManager..."
   FILE="$TARGET/tinyfilemanager.php"
+  wget -qO "$FILE" https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php || {
+    echo "❌ Gagal mengunduh!"
+    sleep 2
+    continue
+  }
 
-  echo "⬇️ Mengunduh TinyFileManager ke $FILE..."
-  wget -q -O "$FILE" https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php
+  # Configuration
+  echo "🛠️ Mengkonfigurasi..."
+  sed -i "s|\$root_path = .*|\$root_path = '/';|" "$FILE"
+  sed -i '/\$auth_users = array(/,$d' "$FILE"
+  sed -i '/\$use_login/d' "$FILE"
 
-  echo "🛠️ Set akses root dan bersihkan auth default..."
-  sed -i "s|\$root_path = .*|\\\$root_path = '/';|" "$FILE"
-  sed -i '/auth_users/d' "$FILE"
-  sed -i '/use_login/d' "$FILE"
-  sed -i '/theme/d' "$FILE"
-  sed -i '/default_timezone/d' "$FILE"
-
-  echo "🔐 Membuat config.php dengan password terenkripsi..."
-  HASHED_PASS=$(php -r "echo password_hash('$TINYPASS', PASSWORD_DEFAULT);")
+  # Create config.php
+  echo "🔐 Membuat konfigurasi login..."
+  HASHED_PASS=$(php -r "echo password_hash('$TINYPASS', PASSWORD_BCRYPT);")
   cat > "$TARGET/config.php" <<EOF
 <?php
 \$auth_users = array(
-  '$TINYUSER' => '$HASHED_PASS'
+    '$TINYUSER' => '$HASHED_PASS'
 );
 \$use_login = true;
 \$theme = "light";
 \$default_timezone = "Asia/Jakarta";
 EOF
 
+  # Set permissions
   chown www-data:www-data "$TARGET/config.php"
-  chmod 666 "$TARGET/config.php"
+  chmod 640 "$TARGET/config.php"
+  chmod o+rx /home 2>/dev/null || true
 
-  echo "📐 Set upload limit PHP ke 2048M..."
+  # PHP settings
+  echo "📐 Mengatur upload limit..."
   PHP_VER=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
   PHP_INI="/etc/php/$PHP_VER/fpm/php.ini"
-  sed -i 's/^upload_max_filesize.*/upload_max_filesize = 2048M/' "$PHP_INI"
-  sed -i 's/^post_max_size.*/post_max_size = 2048M/' "$PHP_INI"
-  systemctl restart php$PHP_VER-fpm
+  sed -i 's/^\(upload_max_filesize\s*=\s*\).*/\12048M/' "$PHP_INI"
+  sed -i 's/^\(post_max_size\s*=\s*\).*/\12048M/' "$PHP_INI"
+  systemctl restart "php$PHP_VER-fpm" >/dev/null 2>&1
 
-  echo "🔓 Izinkan akses /home/bayu (jika perlu)..."
-  chmod o+rx /home/bayu 2>/dev/null
-
+  # Final output - TAMPILKAN PASSWORD ASLI
   IP=$(hostname -I | awk '{print $1}')
   echo ""
-  echo "✅ TinyFileManager berhasil dipasang!"
-  echo "🌐 Akses: http://$IP:$PORT_FOUND/tinyfilemanager.php"
+  echo "✅ TinyFileManager berhasil diinstal!"
+  echo "===================================="
+  echo "🌐 URL: http://$IP:$PORT_FOUND/tinyfilemanager.php"
   echo "👤 Username: $TINYUSER"
   echo "🔑 Password: $TINYPASS"
+  echo "📌 Root Path: / (akses penuh)"
+  echo "===================================="
+  
+  # Untuk copy-paste mudah
+  echo ""
+  echo "📋 Untuk copy:"
+  echo "URL: http://$IP:$PORT_FOUND/tinyfilemanager.php"
+  echo "User: $TINYUSER"
+  echo "Pass: $TINYPASS"
   ;;
 
 0)
