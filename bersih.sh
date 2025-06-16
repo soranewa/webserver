@@ -78,19 +78,21 @@ echo 3 > /proc/sys/vm/drop_caches
 # 13. Tampilkan sisa RAM dan CPU setelah dibersihkan
 echo -e "${CYAN}📊 Status Sistem setelah dibersihkan:${RESET}"
 
-# 14. RAM
+# 14. Status RAM setelah pembersihan
+echo -e "${CYAN}📊 Status RAM setelah pembersihan:${RESET}"
 mem_line=$(free | grep Mem:)
 total_mem=$(echo "$mem_line" | awk '{print $2}')
 used_mem=$(echo "$mem_line" | awk '{print $3}')
 available_mem=$(echo "$mem_line" | awk '{print $7}')
 mem_percent=$((used_mem * 100 / total_mem))
 
-echo -e "🧠 RAM:  Total: $(free -h | awk '/Mem:/ {print $2}') | Digunakan: $(free -h | awk '/Mem:/ {print $3}') | Tersedia: $(free -h | awk '/Mem:/ {print $7}') | ${mem_percent}% digunakan"
+echo -e "🧠 ${YELLOW}RAM:${RESET}  Total: $(free -h | awk '/Mem:/ {print $2}') | Digunakan: $(free -h | awk '/Mem:/ {print $3}') | Tersedia: $(free -h | awk '/Mem:/ {print $7}') | ${mem_percent}% digunakan"
 
-# 15. CPU
+# 15. Status CPU setelah pembersihan
+echo -e "${CYAN}📊 Status CPU setelah pembersihan:${RESET}"
 cpu_idle=$(top -bn1 | grep "%Cpu(s)" | awk '{print $8}')
 cpu_used=$(LC_NUMERIC=C awk "BEGIN {printf \"%.1f\", 100 - $cpu_idle}")
-echo -e "⚙️  CPU:  ${cpu_used}% digunakan (idle: ${cpu_idle}%)"
+echo -e "⚙️  ${YELLOW}CPU:${RESET}  ${cpu_used}% digunakan (idle: ${cpu_idle}%)"
 
 # 16. Bersihkan file sementara dari curl <(bash)
 echo -e "${YELLOW}🧼 Menghapus file sementara dari curl (<(bash))...${RESET}"
