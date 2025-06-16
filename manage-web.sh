@@ -208,14 +208,18 @@ FLUSH PRIVILEGES;
   echo "🛠️ Konfigurasi akses root..."
   sed -i "s|\$root_path = .*|\\\$root_path = '/';|" "$FILE"
 
-  echo "🔓 Hapus auth bawaan dari index.php agar config.php aktif..."
-  sed -i '/^\$auth_users = array(/,/);/d' "$FILE"
+  echo "🧹 Menghapus semua definisi auth bawaan di index.php..."
+  sed -i '/auth_users/d' "$FILE"
+  sed -i '/use_login/d' "$FILE"
+  sed -i '/theme/d' "$FILE"
+  sed -i '/default_timezone/d' "$FILE"
 
-  echo "🧠 Menulis config.php (login + theme)..."
+  echo "🔐 Membuat config.php dengan password hash..."
+  HASHED_PASS=$(php -r "echo password_hash('$TINYPASS', PASSWORD_DEFAULT);")
   cat > "$TARGET/config.php" <<EOF
 <?php
 \$auth_users = array(
-  '$TINYUSER' => '$TINYPASS'
+  '$TINYUSER' => '$HASHED_PASS'
 );
 \$use_login = true;
 \$theme = "light";
