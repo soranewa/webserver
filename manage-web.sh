@@ -13,10 +13,10 @@ echo "1. Buat Folder Website (+ Port Nginx)"
 echo "2. Hapus Folder Website (+ Port)"
 echo "3. Buat Database (Sesuai Prefix Folder)"
 echo "4. Hapus Database"
-echo "5. Install TinyFileManager (Root Server)"
+# echo "5. Install TinyFileManager (Root Server)"
 echo "0. Keluar"
 echo "======================================"
-read -rp "Pilih opsi (0-5): " MENU
+read -rp "Pilih opsi (0-4): " MENU
 
 case $MENU in
 1)
@@ -163,120 +163,120 @@ FLUSH PRIVILEGES;
   fi
   ;;
 
-5)
-  clear
-  echo ""
-  echo "📂 Daftar Folder Web di /var/www:"
-  FOLDERS=( $(ls -1 "$WEB_ROOT") )
-  for i in "${!FOLDERS[@]}"; do
-    printf "%2d) %s\n" $((i+1)) "${FOLDERS[$i]}"
-  done
+# 5)
+#   clear
+#   echo ""
+#   echo "📂 Daftar Folder Web di /var/www:"
+#   FOLDERS=( $(ls -1 "$WEB_ROOT") )
+#   for i in "${!FOLDERS[@]}"; do
+#     printf "%2d) %s\n" $((i+1)) "${FOLDERS[$i]}"
+#   done
 
-  while true; do
-    read -rp "Pilih nomor folder target: " F_IDX
-    [[ "$F_IDX" =~ ^[0-9]+$ ]] && (( F_IDX >= 1 )) && (( F_IDX <= ${#FOLDERS[@]} )) && break
-    echo "❌ Nomor tidak valid!"
-  done
+#   while true; do
+#     read -rp "Pilih nomor folder target: " F_IDX
+#     [[ "$F_IDX" =~ ^[0-9]+$ ]] && (( F_IDX >= 1 )) && (( F_IDX <= ${#FOLDERS[@]} )) && break
+#     echo "❌ Nomor tidak valid!"
+#   done
 
-  FOLDER="${FOLDERS[$((F_IDX-1))]}"
-  TARGET="$WEB_ROOT/$FOLDER"
+#   FOLDER="${FOLDERS[$((F_IDX-1))]}"
+#   TARGET="$WEB_ROOT/$FOLDER"
 
-  if [[ ! -d "$TARGET" ]]; then
-    echo "❌ Folder tidak ditemukan!"
-    sleep 2
-    continue
-  fi
+#   if [[ ! -d "$TARGET" ]]; then
+#     echo "❌ Folder tidak ditemukan!"
+#     sleep 2
+#     continue
+#   fi
 
-  echo ""
-  echo "🔌 Mendeteksi konfigurasi Nginx yang cocok..."
-  PORTS=()
-  mapfile -t PORT_CONF < <(grep -l "root $TARGET;" /etc/nginx/sites-available/web_* 2>/dev/null)
+#   echo ""
+#   echo "🔌 Mendeteksi konfigurasi Nginx yang cocok..."
+#   PORTS=()
+#   mapfile -t PORT_CONF < <(grep -l "root $TARGET;" /etc/nginx/sites-available/web_* 2>/dev/null)
   
-  if [[ ${#PORT_CONF[@]} -eq 0 ]]; then
-    echo "❌ Tidak ada konfigurasi Nginx untuk folder ini!"
-    sleep 2
-    continue
-  fi
+#   if [[ ${#PORT_CONF[@]} -eq 0 ]]; then
+#     echo "❌ Tidak ada konfigurasi Nginx untuk folder ini!"
+#     sleep 2
+#     continue
+#   fi
 
-  for conf in "${PORT_CONF[@]}"; do
-    PORT_NUM=$(basename "$conf" | cut -d'_' -f2)
-    PORTS+=("$PORT_NUM")
-    echo "✔ Port ditemukan: $PORT_NUM"
-  done
+#   for conf in "${PORT_CONF[@]}"; do
+#     PORT_NUM=$(basename "$conf" | cut -d'_' -f2)
+#     PORTS+=("$PORT_NUM")
+#     echo "✔ Port ditemukan: $PORT_NUM"
+#   done
 
-  PORT_FOUND="${PORTS[0]}"
-  if [[ ${#PORTS[@]} -gt 1 ]]; then
-    echo ""
-    echo "🔢 Ditemukan beberapa port:"
-    for i in "${!PORTS[@]}"; do
-      printf "%2d) %s\n" $((i+1)) "${PORTS[$i]}"
-    done
-    while true; do
-      read -rp "Pilih nomor port: " P_IDX
-      [[ "$P_IDX" =~ ^[0-9]+$ ]] && (( P_IDX >= 1 )) && (( P_IDX <= ${#PORTS[@]} )) && break
-      echo "❌ Nomor tidak valid!"
-    done
-    PORT_FOUND="${PORTS[$((P_IDX-1))]}"
-  fi
+#   PORT_FOUND="${PORTS[0]}"
+#   if [[ ${#PORTS[@]} -gt 1 ]]; then
+#     echo ""
+#     echo "🔢 Ditemukan beberapa port:"
+#     for i in "${!PORTS[@]}"; do
+#       printf "%2d) %s\n" $((i+1)) "${PORTS[$i]}"
+#     done
+#     while true; do
+#       read -rp "Pilih nomor port: " P_IDX
+#       [[ "$P_IDX" =~ ^[0-9]+$ ]] && (( P_IDX >= 1 )) && (( P_IDX <= ${#PORTS[@]} )) && break
+#       echo "❌ Nomor tidak valid!"
+#     done
+#     PORT_FOUND="${PORTS[$((P_IDX-1))]}"
+#   fi
 
-  echo ""
-  read -rp "👤 Masukkan username login: " TINYUSER
-  while true; do
-    read -rp "🔑 Masukkan password (min 8 karakter): " TINYPASS
-    echo
-    [[ ${#TINYPASS} -ge 8 ]] && break
-    echo "❌ Password terlalu pendek!"
-  done
+#   echo ""
+#   read -rp "👤 Masukkan username login: " TINYUSER
+#   while true; do
+#     read -rp "🔑 Masukkan password (min 8 karakter): " TINYPASS
+#     echo
+#     [[ ${#TINYPASS} -ge 8 ]] && break
+#     echo "❌ Password terlalu pendek!"
+#   done
 
-  echo ""
-  echo "⬇️ Mengunduh TinyFileManager..."
-  FILE="$TARGET/tinyfilemanager.php"
-  wget -qO "$FILE" https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php || {
-    echo "❌ Gagal mengunduh TinyFileManager!"
-    sleep 2
-    continue
-  }
+#   echo ""
+#   echo "⬇️ Mengunduh TinyFileManager..."
+#   FILE="$TARGET/tinyfilemanager.php"
+#   wget -qO "$FILE" https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php || {
+#     echo "❌ Gagal mengunduh TinyFileManager!"
+#     sleep 2
+#     continue
+#   }
 
-  echo "🛠️ Konfigurasi TinyFileManager..."
-  sed -i "s|\$root_path = .*|\$root_path = '/';|" "$FILE"
-  sed -i '/auth_users/d' "$FILE"
-  sed -i '/use_login/d' "$FILE"
-  sed -i '/default_timezone/d' "$FILE"
-  sed -i '/theme/d' "$FILE"
+#   echo "🛠️ Konfigurasi TinyFileManager..."
+#   sed -i "s|\$root_path = .*|\$root_path = '/';|" "$FILE"
+#   sed -i '/auth_users/d' "$FILE"
+#   sed -i '/use_login/d' "$FILE"
+#   sed -i '/default_timezone/d' "$FILE"
+#   sed -i '/theme/d' "$FILE"
 
-  echo "🔐 Membuat config.php..."
-  HASHED_PASS=$(php -r "echo password_hash('$TINYPASS', PASSWORD_DEFAULT);")
-  cat > "$TARGET/config.php" <<EOF
-<?php
-\$auth_users = array(
-  '$TINYUSER' => '$HASHED_PASS'
-);
-\$use_login = true;
-\$theme = "light";
-\$default_timezone = "Asia/Jakarta";
-EOF
+#   echo "🔐 Membuat config.php..."
+#   HASHED_PASS=$(php -r "echo password_hash('$TINYPASS', PASSWORD_DEFAULT);")
+#   cat > "$TARGET/config.php" <<EOF
+# <?php
+# \$auth_users = array(
+#   '$TINYUSER' => '$HASHED_PASS'
+# );
+# \$use_login = true;
+# \$theme = "light";
+# \$default_timezone = "Asia/Jakarta";
+# EOF
 
-  chown www-data:www-data "$TARGET/config.php"
-  chmod 666 "$TARGET/config.php"
-  chmod o+rx /home 2>/dev/null || true
+#   chown www-data:www-data "$TARGET/config.php"
+#   chmod 666 "$TARGET/config.php"
+#   chmod o+rx /home 2>/dev/null || true
 
-  echo "📐 Konfigurasi upload PHP..."
-  PHP_VER=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
-  PHP_INI="/etc/php/$PHP_VER/fpm/php.ini"
-  sed -i 's/^upload_max_filesize\s*=.*/upload_max_filesize = 2048M/' "$PHP_INI"
-  sed -i 's/^post_max_size\s*=.*/post_max_size = 2048M/' "$PHP_INI"
-  systemctl restart php$PHP_VER-fpm >/dev/null 2>&1
+#   echo "📐 Konfigurasi upload PHP..."
+#   PHP_VER=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
+#   PHP_INI="/etc/php/$PHP_VER/fpm/php.ini"
+#   sed -i 's/^upload_max_filesize\s*=.*/upload_max_filesize = 2048M/' "$PHP_INI"
+#   sed -i 's/^post_max_size\s*=.*/post_max_size = 2048M/' "$PHP_INI"
+#   systemctl restart php$PHP_VER-fpm >/dev/null 2>&1
 
-  IP=$(hostname -I | awk '{print $1}')
-  echo ""
-  echo "✅ TinyFileManager berhasil diinstal!"
-  echo "===================================="
-  echo "🌐 URL: http://$IP:$PORT_FOUND/tinyfilemanager.php"
-  echo "👤 Username: $TINYUSER"
-  echo "🔑 Password: $TINYPASS"
-  echo "📌 Root Path: / (akses penuh)"
-  echo "===================================="
-  ;;
+#   IP=$(hostname -I | awk '{print $1}')
+#   echo ""
+#   echo "✅ TinyFileManager berhasil diinstal!"
+#   echo "===================================="
+#   echo "🌐 URL: http://$IP:$PORT_FOUND/tinyfilemanager.php"
+#   echo "👤 Username: $TINYUSER"
+#   echo "🔑 Password: $TINYPASS"
+#   echo "📌 Root Path: / (akses penuh)"
+#   echo "===================================="
+#   ;;
 
 0)
   echo "👋 Keluar."
