@@ -166,18 +166,41 @@ FLUSH PRIVILEGES;
 5)
   echo ""
   echo "📂 List Folder Web yang tersedia:"
-  FOLDERS=$(ls -1 "$WEB_ROOT")
-  PS3="Pilih folder untuk TinyFileManager: "
-  select FOLDER in $FOLDERS; do
-    [[ -n "$FOLDER" ]] && break
-    echo "❌ Pilihan tidak valid."
+  FOLDERS=( $(ls -1 "$WEB_ROOT") )
+  for i in "${!FOLDERS[@]}"; do
+    printf "%2d) %s\n" $((i+1)) "${FOLDERS[$i]}"
   done
 
+  read -rp "Pilih nomor folder target: " F_IDX
+  FOLDER="${FOLDERS[$((F_IDX-1))]}"
   TARGET="$WEB_ROOT/$FOLDER"
-  FILE="$TARGET/tinyfilemanager.php"
+
+  if [[ ! -d "$TARGET" ]]; then
+    echo "❌ Folder tidak ditemukan: $TARGET"
+    exit 1
+  fi
+
+  echo ""
+  echo "🔌 List Port dari konfigurasi Nginx:"
+  PORTS=()
+  for conf in /etc/nginx/sites-available/web_*; do
+    PORT_NUM=$(basename "$conf" | cut -d'_' -f2)
+    echo "$(( ${#PORTS[@]} + 1 ))) $PORT_NUM"
+    PORTS+=("$PORT_NUM")
+  done
+
+  read -rp "Pilih nomor port yang sesuai dengan folder di atas: " P_IDX
+  PORT_FOUND="${PORTS[$((P_IDX-1))]}"
+
+  if [[ -z "$PORT_FOUND" ]]; then
+    echo "❌ Port tidak ditemukan!"
+    exit 1
+  fi
 
   read -rp "👤 Masukkan username login: " TINYUSER
   read -rp "🔑 Masukkan password login: " TINYPASS
+
+  FILE="$TARGET/tinyfilemanager.php"
 
   echo "⬇️ Mengunduh TinyFileManager ke $FILE..."
   wget -q -O "$FILE" https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php
@@ -212,26 +235,12 @@ EOF
   echo "🔓 Izinkan akses /home/bayu (jika perlu)..."
   chmod o+rx /home/bayu 2>/dev/null
 
-  echo "🔍 Mendeteksi port dari Nginx config..."
-  PORT_FOUND=""
-  for conf in /etc/nginx/sites-available/web_*; do
-    ROOT_DIR=$(grep -m1 "root " "$conf" | awk '{print $2}' | sed 's/;//')
-    if [[ "$ROOT_DIR" == "$TARGET" ]]; then
-      PORT_FOUND=$(basename "$conf" | cut -d'_' -f2)
-      break
-    fi
-  done
-
-  if [[ -z "$PORT_FOUND" ]]; then
-    echo "⚠️ Gagal menemukan port dari konfigurasi Nginx."
-  else
-    IP=$(hostname -I | awk '{print $1}')
-    echo ""
-    echo "✅ TinyFileManager berhasil dipasang!"
-    echo "🌐 Akses: http://$IP:$PORT_FOUND/tinyfilemanager.php"
-    echo "👤 Username: $TINYUSER"
-    echo "🔑 Password: $TINYPASS"
-  fi
+  IP=$(hostname -I | awk '{print $1}')
+  echo ""
+  echo "✅ TinyFileManager berhasil dipasang!"
+  echo "🌐 Akses: http://$IP:$PORT_FOUND/tinyfilemanager.php"
+  echo "👤 Username: $TINYUSER"
+  echo "🔑 Password: $TINYPASS"
   ;;
 
 0)
