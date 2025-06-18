@@ -39,6 +39,10 @@ case $MENU in
   fi
   mkdir -p "$TARGET"
   chown -R www-data:www-data "$TARGET"
+  # Set permission direktori dan file agar bisa dibaca Nginx
+  find "$TARGET" -type d -exec chmod 755 {} \;
+  find "$TARGET" -type f -exec chmod 644 {} \;
+
 
   read -rp "🔢 Masukkan port baru (1024-65535): " PORT
   PHP_VERSION=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
