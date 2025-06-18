@@ -13,10 +13,10 @@ echo "1. Buat Folder Website (+ Port Nginx)"
 echo "2. Hapus Folder Website (+ Port)"
 echo "3. Buat Database (Sesuai Prefix Folder)"
 echo "4. Hapus Database"
-# echo "5. Install TinyFileManager (Root Server)"
+echo "5. Switch Akses Website (Public/Local)"
 echo "0. Keluar"
 echo "======================================"
-read -rp "Pilih opsi (0-4): " MENU
+read -rp "Pilih opsi (0-5): " MENU
 
 case $MENU in
 1)
