@@ -163,120 +163,68 @@ FLUSH PRIVILEGES;
   fi
   ;;
 
-# 5)
-#   clear
-#   echo ""
-#   echo "📂 Daftar Folder Web di /var/www:"
-#   FOLDERS=( $(ls -1 "$WEB_ROOT") )
-#   for i in "${!FOLDERS[@]}"; do
-#     printf "%2d) %s\n" $((i+1)) "${FOLDERS[$i]}"
-#   done
+5)
+  clear
+  echo "======================================"
+  echo "🌐 PILIH MODE AKSES WEBSITE STATIS:"
+  echo "1. Switch ke LOCAL (IP:PORT)"
+  echo "2. Switch ke PUBLIC (Domain)"
+  echo "0. Batal"
+  echo "======================================"
+  read -rp "Pilih opsi (0-2): " MODE
 
-#   while true; do
-#     read -rp "Pilih nomor folder target: " F_IDX
-#     [[ "$F_IDX" =~ ^[0-9]+$ ]] && (( F_IDX >= 1 )) && (( F_IDX <= ${#FOLDERS[@]} )) && break
-#     echo "❌ Nomor tidak valid!"
-#   done
+  [[ "$MODE" == "0" ]] && echo "❌ Dibatalkan." && sleep 1 && continue
 
-#   FOLDER="${FOLDERS[$((F_IDX-1))]}"
-#   TARGET="$WEB_ROOT/$FOLDER"
+  echo ""
+  echo "📂 List Folder Website:"
+  FOLDERS=$(ls -1 "$WEB_ROOT")
+  PS3="Select Number: "
+  select FOLDER in $FOLDERS; do
+    [[ -n "$FOLDER" ]] && break
+    echo "❌ Pilihan tidak valid."
+  done
 
-#   if [[ ! -d "$TARGET" ]]; then
-#     echo "❌ Folder tidak ditemukan!"
-#     sleep 2
-#     continue
-#   fi
+  TARGET="$WEB_ROOT/$FOLDER"
+  NGINX_CONF=""
+  PORT=""
 
-#   echo ""
-#   echo "🔌 Mendeteksi konfigurasi Nginx yang cocok..."
-#   PORTS=()
-#   mapfile -t PORT_CONF < <(grep -l "root $TARGET;" /etc/nginx/sites-available/web_* 2>/dev/null)
-  
-#   if [[ ${#PORT_CONF[@]} -eq 0 ]]; then
-#     echo "❌ Tidak ada konfigurasi Nginx untuk folder ini!"
-#     sleep 2
-#     continue
-#   fi
+  for file in /etc/nginx/sites-available/web_*; do
+    if grep -q "root $TARGET" "$file"; then
+      NGINX_CONF="$file"
+      PORT=$(basename "$file" | cut -d'_' -f2)
+      break
+    fi
+  done
 
-#   for conf in "${PORT_CONF[@]}"; do
-#     PORT_NUM=$(basename "$conf" | cut -d'_' -f2)
-#     PORTS+=("$PORT_NUM")
-#     echo "✔ Port ditemukan: $PORT_NUM"
-#   done
+  if [[ -z "$NGINX_CONF" || -z "$PORT" ]]; then
+    echo "❌ Konfigurasi Nginx tidak ditemukan untuk folder ini."
+    sleep 2
+    continue
+  fi
 
-#   PORT_FOUND="${PORTS[0]}"
-#   if [[ ${#PORTS[@]} -gt 1 ]]; then
-#     echo ""
-#     echo "🔢 Ditemukan beberapa port:"
-#     for i in "${!PORTS[@]}"; do
-#       printf "%2d) %s\n" $((i+1)) "${PORTS[$i]}"
-#     done
-#     while true; do
-#       read -rp "Pilih nomor port: " P_IDX
-#       [[ "$P_IDX" =~ ^[0-9]+$ ]] && (( P_IDX >= 1 )) && (( P_IDX <= ${#PORTS[@]} )) && break
-#       echo "❌ Nomor tidak valid!"
-#     done
-#     PORT_FOUND="${PORTS[$((P_IDX-1))]}"
-#   fi
+  if [[ "$MODE" == "1" ]]; then
+    echo "🧹 Mode LOCAL dipilih: Menghapus .domain dan membuka akses IP:PORT"
+    rm -f "$TARGET/.domain"
+    sed -i '/# STATIC-BLOCK START/,/# STATIC-BLOCK END/d' "$NGINX_CONF"
+    nginx -t && systemctl reload nginx
+    echo "✅ Sekarang web bisa diakses di: http://$(hostname -I | awk '{print $1}'):$PORT"
 
-#   echo ""
-#   read -rp "👤 Masukkan username login: " TINYUSER
-#   while true; do
-#     read -rp "🔑 Masukkan password (min 8 karakter): " TINYPASS
-#     echo
-#     [[ ${#TINYPASS} -ge 8 ]] && break
-#     echo "❌ Password terlalu pendek!"
-#   done
-
-#   echo ""
-#   echo "⬇️ Mengunduh TinyFileManager..."
-#   FILE="$TARGET/tinyfilemanager.php"
-#   wget -qO "$FILE" https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php || {
-#     echo "❌ Gagal mengunduh TinyFileManager!"
-#     sleep 2
-#     continue
-#   }
-
-#   echo "🛠️ Konfigurasi TinyFileManager..."
-#   sed -i "s|\$root_path = .*|\$root_path = '/';|" "$FILE"
-#   sed -i '/auth_users/d' "$FILE"
-#   sed -i '/use_login/d' "$FILE"
-#   sed -i '/default_timezone/d' "$FILE"
-#   sed -i '/theme/d' "$FILE"
-
-#   echo "🔐 Membuat config.php..."
-#   HASHED_PASS=$(php -r "echo password_hash('$TINYPASS', PASSWORD_DEFAULT);")
-#   cat > "$TARGET/config.php" <<EOF
-# <?php
-# \$auth_users = array(
-#   '$TINYUSER' => '$HASHED_PASS'
-# );
-# \$use_login = true;
-# \$theme = "light";
-# \$default_timezone = "Asia/Jakarta";
-# EOF
-
-#   chown www-data:www-data "$TARGET/config.php"
-#   chmod 666 "$TARGET/config.php"
-#   chmod o+rx /home 2>/dev/null || true
-
-#   echo "📐 Konfigurasi upload PHP..."
-#   PHP_VER=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
-#   PHP_INI="/etc/php/$PHP_VER/fpm/php.ini"
-#   sed -i 's/^upload_max_filesize\s*=.*/upload_max_filesize = 2048M/' "$PHP_INI"
-#   sed -i 's/^post_max_size\s*=.*/post_max_size = 2048M/' "$PHP_INI"
-#   systemctl restart php$PHP_VER-fpm >/dev/null 2>&1
-
-#   IP=$(hostname -I | awk '{print $1}')
-#   echo ""
-#   echo "✅ TinyFileManager berhasil diinstal!"
-#   echo "===================================="
-#   echo "🌐 URL: http://$IP:$PORT_FOUND/tinyfilemanager.php"
-#   echo "👤 Username: $TINYUSER"
-#   echo "🔑 Password: $TINYPASS"
-#   echo "📌 Root Path: / (akses penuh)"
-#   echo "===================================="
-#   ;;
+  elif [[ "$MODE" == "2" ]]; then
+    read -rp "🌐 Masukkan domain publik (contoh: static.domain.com): " DOMAIN
+    echo "$DOMAIN" > "$TARGET/.domain"
+    if ! grep -q "# STATIC-BLOCK START" "$NGINX_CONF"; then
+      sed -i "/server_name/a \\\n    # STATIC-BLOCK START\n    allow 127.0.0.1;\n    deny all;\n    # STATIC-BLOCK END\n" "$NGINX_CONF"
+      nginx -t && systemctl reload nginx
+      echo "🔐 Akses langsung via IP:PORT diblokir. Hanya bisa via domain."
+    else
+      echo "ℹ️ Blokir sudah ada di konfigurasi."
+    fi
+  else
+    echo "❌ Mode tidak valid."
+    sleep 1
+    continue
+  fi
+  ;;
 
 0)
   echo "👋 Keluar."
