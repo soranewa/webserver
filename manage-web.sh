@@ -203,22 +203,40 @@ FLUSH PRIVILEGES;
   fi
 
   if [[ "$MODE" == "1" ]]; then
-    echo "🧹 Mode LOCAL dipilih: Menghapus .domain dan membuka akses IP:PORT"
+    echo "🧹 Mode LOCAL dipilih"
     rm -f "$TARGET/.domain"
+
+    # Ganti server_name ke localhost
+    sed -i "s/server_name .*/server_name localhost;/" "$NGINX_CONF"
+
+    # Hapus blokir IP (deny all)
     sed -i '/# STATIC-BLOCK START/,/# STATIC-BLOCK END/d' "$NGINX_CONF"
+
+    # Tambah blokir domain (via host header)
+    if ! grep -q "# HOST-FILTER START" "$NGINX_CONF"; then
+      sed -i "/server_name/a \ \ \ \ # HOST-FILTER START\n    if (\$host !~ \"^localhost\$|^127\.0\.0\.1\$|^192\.168\..*\") { return 444; }\n    # HOST-FILTER END" "$NGINX_CONF"
+    fi
+
     nginx -t && systemctl reload nginx
-    echo "✅ Sekarang web bisa diakses di: http://$(hostname -I | awk '{print $1}'):$PORT"
+    echo "✅ Sekarang hanya bisa diakses via IP: http://$(hostname -I | awk '{print $1}'):$PORT"
 
   elif [[ "$MODE" == "2" ]]; then
     read -rp "🌐 Masukkan domain publik (contoh: static.domain.com): " DOMAIN
     echo "$DOMAIN" > "$TARGET/.domain"
+
+    # Ganti server_name ke domain
+    sed -i "s/server_name .*/server_name $DOMAIN;/" "$NGINX_CONF"
+
+    # Hapus blokir domain
+    sed -i '/# HOST-FILTER START/,/# HOST-FILTER END/d' "$NGINX_CONF"
+
+    # Tambahkan blokir IP jika belum ada
     if ! grep -q "# STATIC-BLOCK START" "$NGINX_CONF"; then
-      sed -i "/server_name/a \\\n    # STATIC-BLOCK START\n    allow 127.0.0.1;\n    deny all;\n    # STATIC-BLOCK END\n" "$NGINX_CONF"
-      nginx -t && systemctl reload nginx
-      echo "🔐 Akses langsung via IP:PORT diblokir. Hanya bisa via domain."
-    else
-      echo "ℹ️ Blokir sudah ada di konfigurasi."
+      sed -i "/location \/ {/i \ \ \ \ # STATIC-BLOCK START\n    allow 127.0.0.1;\n    deny all;\n    # STATIC-BLOCK END\n" "$NGINX_CONF"
     fi
+
+    nginx -t && systemctl reload nginx
+    echo "🔒 Sekarang hanya bisa diakses melalui domain: https://$DOMAIN"
   else
     echo "❌ Mode tidak valid."
     sleep 1
