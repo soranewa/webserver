@@ -120,16 +120,27 @@ elif [[ "$MODE" == "2" ]]; then
   echo "🔒 Menambahkan blokir wp-login.php dan wp-admin di $NGINX_CONF"
   if ! grep -q "# AUTO-BLOCK START" "$NGINX_CONF"; then
     sed -i "/server_name/a \\\n    # AUTO-BLOCK START\n    location = /wp-login.php { return 404; }\n    location = /wp-admin { return 404; }\n    # AUTO-BLOCK END\n" "$NGINX_CONF"
+    nginx -t && systemctl reload nginx
   else
     echo "ℹ️ Blokir sudah ada di konfigurasi Nginx"
   fi
 
   echo "🌐 Mode PUBLIC dipilih"
-  read -rp "🌐 Masukkan domain publik (contoh: static.domain.com): " DOMAIN
-  echo "$DOMAIN" > "$WP_DIR/.domain"
 
   # Ganti server_name ke domain
-  sed -i "s/server_name .*/server_name $DOMAIN;/" "$NGINX_CONF"
+  sed -i "s/server_name .*/server_name $TARGET;/" "$NGINX_CONF"
+
+  # Hapus blokir domain via host
+  sed -i '/# HOST-FILTER START/,/# HOST-FILTER END/d' "$NGINX_CONF"
+
+  # Tambahkan blokir IP jika belum ada
+  if ! grep -q "# STATIC-BLOCK START" "$NGINX_CONF"; then
+    sed -i "/location \/ {/i \ \ \ \ # STATIC-BLOCK START\n    allow 127.0.0.1;\n    deny all;\n    # STATIC-BLOCK END\n" "$NGINX_CONF"
+  fi
+
+  nginx -t && systemctl reload nginx
+  echo "🔒 Sekarang hanya bisa diakses melalui domain: https://$TARGET"
+
 
   # Hapus blokir domain
   sed -i '/# HOST-FILTER START/,/# HOST-FILTER END/d' "$NGINX_CONF"
