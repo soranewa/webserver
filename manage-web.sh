@@ -54,7 +54,6 @@ server {
     server_name localhost;
 
     location / {
-        autoindex on;
         try_files \$uri \$uri/ =404;
     }
 
