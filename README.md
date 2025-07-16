@@ -8,12 +8,12 @@ Kumpulan script Bash untuk mengelola instalasi WordPress berbasis LEMP stack (Li
 
 | File               | Fungsi                                                                 |
 |--------------------|------------------------------------------------------------------------|
-| `install-web.sh`   | Instalasi WordPress + konfigurasi LEMP pada port tertentu              |
-| `uninstall-web.sh` | Menghapus instance WordPress (folder, database, user, Nginx conf)      |
-| `list-web.sh`      | Menampilkan daftar instance WordPress yang terinstal                  |
-| `switch.sh`        | Mengatur ulang URL (siteurl & home) ke IP lokal atau domain publik     |
-| `bersih.sh`        | Membersihkan cache, sampah, dan log sistem untuk optimasi server       |
-| `manage-web.sh`    | Mengelola website static untuk HTML CSS JS PHP dan atau database       |
+| `installer.sh`   | Instalasi WordPress + konfigurasi LEMP pada port tertentu              |
+| `uninstaller.sh` | Menghapus instance WordPress (folder, database, user, Nginx conf)      |
+| `listed.sh`      | Menampilkan daftar instance WordPress yang terinstal                  |
+| `switcher.sh`        | Mengatur ulang URL (siteurl & home) ke IP lokal atau domain publik     |
+| `cleaner.sh`        | Membersihkan cache, sampah, dan log sistem untuk optimasi server       |
+| `staticweb.sh`    | Mengelola website static untuk HTML CSS JS PHP dan atau database       |
 
 ---
 
