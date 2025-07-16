@@ -17,9 +17,10 @@ Kumpulan script Bash untuk mengelola instalasi WordPress berbasis LEMP stack (Li
 
 ---
 
-## 🚀 Cara Penggunaan
+## 🚀 Cara Penggunaan Cepat
 
-### 1. Clone Repository
+### 1. Download dan Jalankan Menu Utama
 ```bash
-git clone https://github.com/soranewa/webserver.git
-cd webserver
+wget -O menu.sh https://raw.githubusercontent.com/soranewa/webserver/main/menu.sh
+chmod +x menu.sh
+./menu.sh
