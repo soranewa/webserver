@@ -19,8 +19,10 @@ Kumpulan script Bash untuk mengelola instalasi WordPress berbasis LEMP stack (Li
 
 ## 🚀 Cara Penggunaan Cepat
 
-### 1. Download dan Jalankan Menu Utama
+### 1. Download dan Install
 ```bash
-wget -O menu.sh https://raw.githubusercontent.com/soranewa/webserver/refs/heads/main/menu.sh
-chmod +x menu.sh
-./menu.sh
+# Download dan install
+sudo curl -sSL https://raw.githubusercontent.com/soranewa/webserver/refs/heads/main/menu.sh -o /usr/local/bin/ybpanel
+sudo chmod +x /usr/local/bin/ybpanel
+# Jalankan
+ybpanel
