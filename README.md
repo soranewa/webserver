@@ -1,4 +1,4 @@
-# ⚙️ Minimal Panel Script Yubay
+# ⚙️ Minimal YB Panel Script
 
 Kumpulan script Bash untuk mengelola instalasi WordPress berbasis LEMP stack (Linux, Nginx, MariaDB, PHP). Dirancang agar bisa diakses secara lokal maupun publik (via domain seperti Cloudflare Tunnel). Cocok untuk digunakan di server ringan seperti Armbian STB dengan OS Armbian Server.
 
