@@ -16,7 +16,8 @@ printf "${CYAN}%-3s %-12s %-30s %-30s %-10s${NC}\n" "NO" "FOLDER" "DOMAIN" "URL"
 echo -e "${CYAN}-------------------------------------------------------------------------------${NC}"
 
 i=1
-for conf in /etc/nginx/sites-available/wp_*; do
+for conf in /etc/nginx/sites-available/{web,wp}_*; do
+# for conf in /etc/nginx/sites-available/wp_*; do
   [ -e "$conf" ] || continue
   PORT=$(basename "$conf" | cut -d'_' -f2)
   ROOT=$(grep "root " "$conf" | head -n1 | awk '{print $2}' | sed 's/;//')
