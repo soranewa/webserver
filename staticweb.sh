@@ -38,8 +38,8 @@ case $MENU in
     continue
   fi
   mkdir -p "$TARGET"
+  echo "<h1>Selamat Datang</h1>" > "$TARGET/index.html"
   chown -R www-data:www-data "$TARGET"
-  # Set permission direktori dan file agar bisa dibaca Nginx
   find "$TARGET" -type d -exec chmod 755 {} \;
   find "$TARGET" -type f -exec chmod 644 {} \;
 
