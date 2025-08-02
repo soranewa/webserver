@@ -31,10 +31,15 @@ while true; do
     echo ""
     echo "📂 List Folder WordPress yang sudah ada:"
     ls -1 "$WEB_ROOT"
-
+  
     echo ""
-    echo "🔢 Port Nginx yang sudah digunakan:"
-    ls /etc/nginx/sites-available/wp_* 2>/dev/null | cut -d'_' -f2
+    echo "🔌 Port Nginx in Use:"
+    ls /etc/nginx/sites-available/web_* /etc/nginx/sites-available/wp_* 2>/dev/null \
+    | grep -E '/(web|wp)_[0-9]+' \
+    | cut -d'_' -f2
+    # echo ""
+    # echo "🔢 Port Nginx yang sudah digunakan:"
+    # ls /etc/nginx/sites-available/wp_* 2>/dev/null | cut -d'_' -f2
 
     echo ""
     read -rp "📁 Nama folder instalasi WordPress (contoh: wp_blog1): " WP_FOLDER
