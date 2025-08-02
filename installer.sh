@@ -101,26 +101,50 @@ while true; do
     PHP_SOCK="/run/php/php${PHP_FPM_VERSION}-fpm.sock"
 
     cat > "$NGINX_CONF" <<EOF
-server {
-    listen $WP_PORT;
-    root $WP_DIR;
-    index index.php index.html;
-    server_name localhost;
-
-    location / {
-        try_files \$uri \$uri/ /index.php?\$args;
+    server {
+        listen $WP_PORT;
+        root $WP_DIR;
+        index index.php index.html;
+        server_name localhost;
+    
+        client_max_body_size 64M;
+    
+        location / {
+            try_files \$uri \$uri/ /index.php?\$args;
+        }
+    
+        location ~ \.php\$ {
+            include snippets/fastcgi-php.conf;
+            fastcgi_pass unix:$PHP_SOCK;
+        }
+    
+        location ~ /\.ht {
+            deny all;
+        }
     }
+    EOF
 
-    location ~ \.php\$ {
-        include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:$PHP_SOCK;
-    }
+#     cat > "$NGINX_CONF" <<EOF
+# server {
+#     listen $WP_PORT;
+#     root $WP_DIR;
+#     index index.php index.html;
+#     server_name localhost;
 
-    location ~ /\.ht {
-        deny all;
-    }
-}
-EOF
+#     location / {
+#         try_files \$uri \$uri/ /index.php?\$args;
+#     }
+
+#     location ~ \.php\$ {
+#         include snippets/fastcgi-php.conf;
+#         fastcgi_pass unix:$PHP_SOCK;
+#     }
+
+#     location ~ /\.ht {
+#         deny all;
+#     }
+# }
+# EOF
 
     ln -sf "$NGINX_CONF" "/etc/nginx/sites-enabled/"
     nginx -t && systemctl reload nginx
