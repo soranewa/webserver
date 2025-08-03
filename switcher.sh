@@ -16,8 +16,9 @@ show_mode_menu() {
   clear
   echo "======================================"
   echo "🔁 PILIH MODE AKSES WORDPRESS:"
-  echo "1. Switch ke LOCAL (IP:PORT)"
+  echo "1. Switch ke LOCAL (IP LAN:PORT)"
   echo "2. Switch ke PUBLIC (Domain)"
+  echo "3. Switch ke PUBLIC (IP Public)"
   echo "0. Batal"
   echo "======================================"
 }
@@ -103,12 +104,12 @@ modify_nginx_config() {
     fi
 
     nginx -t && systemctl reload nginx
-    echo "✅ Sekarang hanya bisa diakses via IP: http://$(hostname -I | awk '{print $1}'):$PORT"
+    echo "✅ Sekarang hanya bisa diakses via IP LAN: http://$(hostname -I | awk '{print $1}'):$PORT"
 
   elif [[ "$MODE" == "2" ]]; then
     echo "$TARGET" > "$WP_DIR/.domain"
 
-    echo "🌐 Mode PUBLIC dipilih"
+    echo "🌐 Mode PUBLIC (Domain) dipilih"
 
     # Ganti server_name ke domain
     sed -i "s/server_name .*/server_name $TARGET;/" "$NGINX_CONF"
@@ -130,13 +131,32 @@ modify_nginx_config() {
 
     nginx -t && systemctl reload nginx
     echo "🔒 Sekarang hanya bisa diakses melalui domain: https://$TARGET"
+    
+  elif [[ "$MODE" == "3" ]]; then
+    echo "🌍 Mode PUBLIC (IP Public) dipilih"
+    rm -f "$WP_DIR/.domain"
+
+    # Ganti server_name ke IP public
+    sed -i "s/server_name .*/server_name $TARGET;/" "$NGINX_CONF"
+
+    # Hapus host filter
+    sed -i '/# HOST-FILTER START/,/# HOST-FILTER END/d' "$NGINX_CONF"
+
+    # Hapus IP block untuk mengizinkan akses dari mana saja
+    sed -i '/# STATIC-BLOCK START/,/# STATIC-BLOCK END/d' "$NGINX_CONF"
+
+    # Hapus blokir wp-login dan wp-admin
+    sed -i '/# AUTO-BLOCK START/,/# AUTO-BLOCK END/d' "$NGINX_CONF"
+
+    nginx -t && systemctl reload nginx
+    echo "🔓 Sekarang bisa diakses melalui IP Public: http://$TARGET:$PORT"
   fi
 }
 
 # === Fungsi Utama: Jalankan alur utama script ===
 main() {
   show_mode_menu
-  read -rp "Pilih opsi (0-2): " MODE
+  read -rp "Pilih opsi (0-3): " MODE
 
   case "$MODE" in
     1)
@@ -154,6 +174,15 @@ main() {
       find_nginx_config
       read -rp "🌐 Masukkan domain publik (contoh: static.domain.com): " TARGET
       URL="https://$TARGET"
+      modify_nginx_config
+      update_wp_database_url
+      ;;
+    3)
+      select_wp_folder
+      extract_db_info
+      find_nginx_config
+      read -rp "🌍 Masukkan IP public server: " TARGET
+      URL="http://${TARGET}:${PORT}"
       modify_nginx_config
       update_wp_database_url
       ;;
