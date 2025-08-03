@@ -100,13 +100,12 @@ while true; do
     PHP_FPM_VERSION=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
     PHP_SOCK="/run/php/php${PHP_FPM_VERSION}-fpm.sock"
 
-cat > "$NGINX_CONF" <<EOF
+    cat > "$NGINX_CONF" <<EOF
 server {
     listen $WP_PORT;
     root $WP_DIR;
     index index.php index.html;
     server_name localhost;
-    client_max_body_size 64M;
 
     location / {
         try_files \$uri \$uri/ /index.php?\$args;
@@ -122,8 +121,6 @@ server {
     }
 }
 EOF
-
-
     ln -sf "$NGINX_CONF" "/etc/nginx/sites-enabled/"
     nginx -t && systemctl reload nginx
 
