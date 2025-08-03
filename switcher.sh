@@ -18,7 +18,7 @@ show_mode_menu() {
   echo "🔁 PILIH MODE AKSES WORDPRESS:"
   echo "1. Switch ke LOCAL (IP LAN:PORT)"
   echo "2. Switch ke PUBLIC (Domain)"
-  echo "3. Switch ke PUBLIC (IP Public)"
+  echo "3. Switch ke PUBLIC (IP Public:PORT)"
   echo "0. Batal"
   echo "======================================"
 }
@@ -139,17 +139,22 @@ modify_nginx_config() {
     # Ganti server_name ke IP public
     sed -i "s/server_name .*/server_name $TARGET;/" "$NGINX_CONF"
 
-    # Hapus host filter
-    sed -i '/# HOST-FILTER START/,/# HOST-FILTER END/d' "$NGINX_CONF"
-
-    # Hapus IP block untuk mengizinkan akses dari mana saja
-    sed -i '/# STATIC-BLOCK START/,/# STATIC-BLOCK END/d' "$NGINX_CONF"
-
     # Hapus blokir wp-login dan wp-admin
     sed -i '/# AUTO-BLOCK START/,/# AUTO-BLOCK END/d' "$NGINX_CONF"
 
+    # Hapus IP block
+    sed -i '/# STATIC-BLOCK START/,/# STATIC-BLOCK END/d' "$NGINX_CONF"
+
+    # Tambahkan host filter khusus untuk IP public
+    if ! grep -q "# HOST-FILTER START" "$NGINX_CONF"; then
+      sed -i "/server_name/a \ \ \ \ # HOST-FILTER START\n    if (\$host !~ \"^$TARGET\$\") { return 444; }\n    # HOST-FILTER END" "$NGINX_CONF"
+    else
+      sed -i "s/if (\$host !~ \".*\")/if (\$host !~ \"^$TARGET\$\")/" "$NGINX_CONF"
+    fi
+
     nginx -t && systemctl reload nginx
-    echo "🔓 Sekarang bisa diakses melalui IP Public: http://$TARGET:$PORT"
+    echo "🔓 Sekarang hanya bisa diakses melalui IP Public: http://$TARGET:$PORT"
+    echo "⚠️ Semua akses melalui domain/URL lain akan diblokir"
   fi
 }
 
