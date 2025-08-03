@@ -106,9 +106,8 @@ while true; do
         root $WP_DIR;
         index index.php index.html;
         server_name localhost;
-    
         client_max_body_size 64M;
-    
+        
         location / {
             try_files \$uri \$uri/ /index.php?\$args;
         }
@@ -123,28 +122,6 @@ while true; do
         }
     }
     EOF
-
-#     cat > "$NGINX_CONF" <<EOF
-# server {
-#     listen $WP_PORT;
-#     root $WP_DIR;
-#     index index.php index.html;
-#     server_name localhost;
-
-#     location / {
-#         try_files \$uri \$uri/ /index.php?\$args;
-#     }
-
-#     location ~ \.php\$ {
-#         include snippets/fastcgi-php.conf;
-#         fastcgi_pass unix:$PHP_SOCK;
-#     }
-
-#     location ~ /\.ht {
-#         deny all;
-#     }
-# }
-# EOF
 
     ln -sf "$NGINX_CONF" "/etc/nginx/sites-enabled/"
     nginx -t && systemctl reload nginx
