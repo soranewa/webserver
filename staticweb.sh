@@ -218,7 +218,7 @@ FLUSH PRIVILEGES;
 
     # Tambah blokir domain (via host header)
     if ! grep -q "# HOST-FILTER START" "$NGINX_CONF"; then
-      sed -i "/server_name/a \ \ \ \ # HOST-FILTER START\n    if (\$host !~ \"^localhost\$|^127\.0\.0\.1\$|^192\.168\..*\") { return 444; }\n    # HOST-FILTER END" "$NGINX_CONF"
+      sed -i "/server_name/a \ \ \ \ # HOST-FILTER START\n    if (\$host !~ \"^localhost\$|^127\.0\.0\.1\$|^192\.168\..*\$|^48\.48\..*\") { return 444; }\n    # HOST-FILTER END" "$NGINX_CONF"
     fi
 
     nginx -t && systemctl reload nginx
