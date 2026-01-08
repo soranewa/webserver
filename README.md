@@ -28,4 +28,4 @@ sudo chmod +x /usr/local/bin/ybpanel
 ybpanel
 
 # Uninstall
-sudo rm /usr/local/bin/yubay
+sudo rm /usr/local/bin/ybpanel
