@@ -134,14 +134,11 @@ EOF
   2)
     echo "🧱 Menginstal LEMP Stack..."
     apt update -y
-    # Instalasi standar (mungkin menarik apache2 sebagai dependensi)
     apt install -y nginx mariadb-server php php-fpm php-mysql php-curl php-gd php-mbstring php-xml php-xmlrpc php-soap php-intl php-zip unzip curl
 
-    # === Tambahan untuk menghapus Apache2 secara bersih ===
     echo "🧹 Menghapus Apache2 agar tidak bentrok dengan Nginx..."
     systemctl stop apache2 2>/dev/null
     apt-get purge -y apache2* apt-get autoremove -y
-    # ======================================================
 
     PHP_FPM_VERSION=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
     PHP_FPM_SERVICE="php${PHP_FPM_VERSION}-fpm"
@@ -149,7 +146,7 @@ EOF
     systemctl enable nginx mariadb "$PHP_FPM_SERVICE"
     systemctl start nginx mariadb "$PHP_FPM_SERVICE"
 
-    echo "✅ LEMP Stack aktif dan Apache2 telah dihapus."
+    echo "✅ LEMP Stack aktif dan Apache2 telah dibersihkan."
     ;;
 
   0)
