@@ -138,7 +138,8 @@ EOF
 
     echo "🧹 Menghapus Apache2 agar tidak bentrok dengan Nginx..."
     systemctl stop apache2 2>/dev/null
-    apt-get purge -y apache2* apt-get autoremove -y
+    apt-get purge -y apache2*
+    apt-get autoremove -y
 
     PHP_FPM_VERSION=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
     PHP_FPM_SERVICE="php${PHP_FPM_VERSION}-fpm"
